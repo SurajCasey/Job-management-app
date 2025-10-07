@@ -12,7 +12,7 @@ import { supabase } from "../lib/supabaseClient";
 const LoginSignup = () => {
     // Login states
     const [loginEmail, setLoginEmail] = useState("");
-    const [loginPassword, setLoginPassword] = useState(""); // Fixed: was loginpassword
+    const [loginPassword, setLoginPassword] = useState("");
     
     // Signup states
     const [fullName, setFullName] = useState("");
@@ -34,7 +34,7 @@ const LoginSignup = () => {
             // Sign in with Supabase auth
             const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
                 email: loginEmail,
-                password: loginPassword // Fixed: was loginpassword
+                password: loginPassword
             });
             
             if(authError){
@@ -81,7 +81,7 @@ const LoginSignup = () => {
             
         } catch (err) {
             console.error("handleLogin unexpected error:", err);
-            toast.error("An unexpected error occurred."); // Fixed: was "eroor"
+            toast.error("An unexpected error occurred."); 
         } finally {
             setIsLoading(false);
         }
@@ -138,7 +138,6 @@ const LoginSignup = () => {
                 return;
             }
 
-            alert(`User created with ID: ${signupData.user.id}. Now inserting profile...`);
             
             // Insert user profile into custom users table
             console.log("Attempting to insert user profile for ID:", signupData.user.id);
@@ -178,11 +177,11 @@ const LoginSignup = () => {
             toast.success(
                 "Account created successfully! Please wait for admin approval before logging in.", 
                 { duration: 4000 }
-            ); // Fixed: was "singup"
+            ); 
 
         } catch (err) {
             console.error("Signup error:", err);
-            toast.error("An unexpected error occurred during signup."); // Fixed: was "singup"
+            toast.error("An unexpected error occurred during signup."); 
         } finally {
             setIsLoading(false);
         }
