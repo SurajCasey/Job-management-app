@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
-import { FaBriefcase, FaSignOutAlt } from "react-icons/fa"
-import { useNavigate } from "react-router-dom";
+import { FaBriefcase} from "react-icons/fa"
+import LogoutButton from "./buttons/LogoutButton";
 
 
 const Header = () => {
   const [currTime, setCurrTime] = useState(
     new Date().toLocaleTimeString("en-US", {hour12: true})
   );
-  const navigate = useNavigate();
   // constant update of time
   useEffect(()=>{
     const interval = setInterval(()=>{
@@ -16,11 +15,7 @@ const Header = () => {
     return () => clearInterval(interval);
   })
   // for logout
-  const handleLogout = () =>{
-    localStorage.removeItem("user");
-    navigate("/LoginSignup");
-  }
-
+ 
 
   return (
     <header 
@@ -33,13 +28,7 @@ const Header = () => {
         <div className="w-full md:w-auto flex justify-between gap-5">
           <p>{currTime}</p>
           <p>Welcome, Admin</p>
-          <button
-            className="flex items-center font-medium"
-            onClick={handleLogout}
-          >
-            <FaSignOutAlt size={20}/>
-            Logout
-          </button>
+          <LogoutButton/>
         </div>
     </header>
   )
