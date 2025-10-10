@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { supabase } from "../lib/supabaseClient";
+import { LoginUser } from "../../utils/helpers";
 
 const LoginForm = () => {
     const [loginEmail, setLoginEmail] = useState("");
@@ -14,55 +14,24 @@ const LoginForm = () => {
         setIsLoading(true);
 
         try {
-            const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+            const result = await LoginUser({
                 email: loginEmail,
-                password: loginPassword
-            });
-
-            if (authError) {
-                toast.error(authError.message || "Login failed");
+                password: loginPassword,
+            })
+            if(!result.success){
+                toast.error(result.error || "Login failed");
                 return;
             }
 
-            const userId = authData?.user?.id;
-
-            if (!userId) {
-                toast.error("User ID not found after login.");
-                return;
-            }
-
-            const { data: profile, error: profileError } = await supabase
-                .from("users")
-                .select("role, approved_by_admin")
-                .eq("id", userId)
-                .single();
-
-            if (profileError) {
-                toast.error("Could not load user profile. Contact admin.");
-                await supabase.auth.signOut();
-                return;
-            }
-
-            if (!profile?.approved_by_admin) {
-                toast.error("Your account is not approved by admin yet.");
-                await supabase.auth.signOut();
-                return;
-            }
-
-            if (profile.role === "admin") {
-                toast.success("Welcome, Admin!");
-                navigate("/admin/dashboard");
-            } else {
-                toast.success("Welcome, User!");
-                navigate("/employee/dashboard");
-            }
-
-        } catch (err) {
-            console.error("handleLogin unexpected error:", err);
-            toast.error("An unexpected error occurred.");
-        } finally {
+            toast.success("Login successful!");
+            navigate("/app");
+        } catch (error) {
+            console.error("Login error", error);
+            toast.error("An unexpected error occured.")
+        }finally {
             setIsLoading(false);
         }
+      
     };
 
     return (

@@ -2,8 +2,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
 import { FaBriefcase } from "react-icons/fa";
 import { FiLogIn } from "react-icons/fi";
 import { IoLogOutOutline } from "react-icons/io5";
-import LoginForm from "../components/LoginForm";
-import SignupForm from "../components/SignupForm";
+import LoginForm from "../components/forms/LoginForm";
+import SignupForm from "../components/forms/SignupForm";
 
 const LoginSignup = () => {
     return (

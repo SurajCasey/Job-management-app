@@ -1,6 +1,6 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { supabase } from "../lib/supabaseClient";
+import { signupUser } from "../../utils/helpers";
 
 const SignupForm = () => {
     const [fullName, setFullName] = useState("");
@@ -36,73 +36,26 @@ const SignupForm = () => {
 
         setIsLoading(true);
 
-        try {
-            console.log('🔐 Step 1: Creating auth user...');
-
-            const { data: signupData, error: signupError } = await supabase.auth.signUp({
+        try{
+            const result = await signupUser({
+                fullName,
                 email: signupEmail,
+                employerEmail,
                 password: newPassword,
-                options: {
-                    data: {
-                        name: fullName,
-                    },
-                },
-            });
-
-            console.log('✅ Auth signup result:', { signupData, signupError });
-
-            if (signupError) {
-                toast.error(signupError.message);
+            })
+            if(!result.success){
+                toast.error(result.error || "Signup failed");
                 return;
             }
-
-            if (!signupData.user?.id) {
-                toast.error("Failed to create user account");
-                return;
-            }
-
-            console.log('✅ Auth user created with ID:', signupData.user.id);
-            console.log('🔐 Step 2: Creating user profile in database...');
-
-            // Wait a moment for auth user to be fully created
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            const { data: insertData, error: insertError } = await supabase
-                .from("users")
-                .insert({
-                    id: signupData.user.id,
-                    name: fullName,
-                    email: signupEmail,
-                    employer_email: employerEmail,
-                    role: 'employee',
-                    approved_by_admin: false,
-                    created_at: new Date().toISOString(),
-                });
-
-            console.log("📋 Insert result:", { insertData, insertError });
-
-            if (insertError) {
-                console.error("❌ Failed to create user profile:", insertError);
-                toast.error(`Failed to create user profile: ${insertError.message}`);
-                return;
-            }
-
-            console.log("✅ User profile created successfully!");
-
-            // Reset Form
             setFullName("");
             setSignupEmail("");
             setEmployerEmail("");
             setNewPassword("");
             setConfirmPassword("");
 
-            toast.success(
-                "Account created successfully! Please wait for admin approval before logging in.",
-                { duration: 4000 }
-            );
-
-        } catch (err) {
-            console.error("💥 Signup error:", err);
+            toast.success("Account created! Please wait for admin approval.", {duration: 5000});
+        } catch (error) {
+            console.error("Signup error:", error);
             toast.error("An unexpected error occurred during signup.");
         } finally {
             setIsLoading(false);

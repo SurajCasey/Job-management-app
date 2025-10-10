@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { FaBriefcase} from "react-icons/fa"
-import LogoutButton from "./buttons/LogoutButton";
-
+import { useAuth } from "../../hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import { MdLogout } from "react-icons/md";
 
 const Header = () => {
+  const {profile, signOut} = useAuth();
+  const navigate = useNavigate();
   const [currTime, setCurrTime] = useState(
     new Date().toLocaleTimeString("en-US", {hour12: true})
   );
@@ -15,7 +18,10 @@ const Header = () => {
     return () => clearInterval(interval);
   })
   // for logout
- 
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   return (
     <header 
@@ -27,9 +33,15 @@ const Header = () => {
         </div>
         <div className="w-full md:w-auto flex justify-between gap-5">
           <p>{currTime}</p>
-          <p>Welcome, Admin</p>
-          <LogoutButton/>
+          <p>Welcome, {profile?.name || 'User'}</p>
         </div>
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-1 hover:text-red-700 cursor-pointer"
+        >
+          <MdLogout size={18}/>
+          Logout
+        </button>
     </header>
   )
 }
