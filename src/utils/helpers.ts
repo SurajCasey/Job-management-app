@@ -1,7 +1,5 @@
 import { supabase } from "../lib/supabaseClient";
 
-
-
 export interface LoginCredentials {
     email: string;
     password: string;
@@ -19,7 +17,6 @@ export interface LoginResult{
     role? : string;
     error? : string;
 }
-
 
 export const LoginUser = async (credentials : LoginCredentials): Promise <LoginResult> =>{
     try {
@@ -44,6 +41,7 @@ export const LoginUser = async (credentials : LoginCredentials): Promise <LoginR
             .single();
         
         if(profileError){
+            console.error("Profile fetch error:", profileError);
             await supabase.auth.signOut();
             return {success:false, error: "Could not load user profile. Contact Admin."};
         }
@@ -63,6 +61,7 @@ export const LoginUser = async (credentials : LoginCredentials): Promise <LoginR
 
 export const signupUser = async (formData: SignupData): Promise<{success: boolean; error?:string}>=>{
     try {
+        // First, sign up the user with Supabase Auth
         const {data: authResponse, error: signupError} = await supabase.auth.signUp({
             email: formData.email,
             password: formData.password,
@@ -70,26 +69,32 @@ export const signupUser = async (formData: SignupData): Promise<{success: boolea
                 data:{
                     name: formData.fullName,
                 },
+                emailRedirectTo: window.location.origin,
             },
         });
 
         if(signupError){
+            console.error("Signup error:", signupError);
             return {success:false, error: signupError.message};
         }
 
-       const userId = authResponse.user?.id;
+        const userId = authResponse.user?.id;
 
-       if(!userId){
-        return {
-            success:false, 
-            error:"User Id not returned. Please verify your email if confirmation is required",
+        if(!userId){
+            console.error("No user ID returned from signup");
+            return {
+                success:false, 
+                error:"User ID not returned. Please try again or contact support.",
+            }
         }
-       }
+
+        // Wait a moment for the auth user to be fully created
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
         // Insert user data into users table
         const { error: insertError} = await supabase
             .from('users')
-            .insert([{
+            .insert({
                 id: userId,
                 name: formData.fullName,
                 email: formData.email,
@@ -97,16 +102,26 @@ export const signupUser = async (formData: SignupData): Promise<{success: boolea
                 role: 'employee',
                 approved_by_admin: false,
                 created_at: new Date().toISOString(),
-            }]);
+            });
+
         if(insertError){
-            console.error("Failed to create user profile", insertError);
-            return {success: false, error: "Failed to create user profile."}
+            console.error("Failed to create user profile:", insertError);
+            // Try to clean up the auth user if profile creation failed
+            try {
+                await supabase.auth.admin.deleteUser(userId);
+            } catch (cleanupError) {
+                console.error("Failed to cleanup auth user:", cleanupError);
+            }
+            return {success: false, error: `Failed to create user profile: ${insertError.message}`}
         }
+
+        // Sign out the user immediately after signup
+        await supabase.auth.signOut();
         
-       return {success: true};
+        return {success: true};
 
     } catch (error) {
-        console.error("Error signing up", error);
+        console.error("Error signing up:", error);
         return{success: false, error: "An unexpected error occured during signup."};
     }
 };

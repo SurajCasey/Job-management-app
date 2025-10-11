@@ -1,42 +1,52 @@
-import { Toaster } from "react-hot-toast";
-import "./index.css";
-import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
-import LoginSignup from "./pages/LoginSignup";
-import NotApproved from "./pages/NotApproved";
-// import ProtectedRoute from "./components/shared/ProtectedRoute";
-
-import AdminDashboard from "./pages/AdminDashboard";
+import { Toaster } from 'react-hot-toast';
+import './index.css'
+import { Route, BrowserRouter as Router, Routes } from 'react-router-dom'
+import LoginSignup from './pages/LoginSignup';
+import NotApproved from './pages/NotApproved';
+import ProtectedRoute from './components/shared/ProtectedRoute';
+import MainApp from './pages/MainApp';
+import AdminDashboard from './pages/AdminDashboard';
 
 function App() {
   return (
     <Router>
-      <Toaster position="top-center" reverseOrder={false} />
+      <Toaster position='top-center' reverseOrder={false}/>
       <Routes>
         {/* Public route */}
-        <Route path="/" element={<LoginSignup />} />
-        {/* not approved route */}
-        <Route path="/not-approved" element={<NotApproved />} />
+        <Route path='/' element={<LoginSignup/>}/>
+        
+        {/* Not approved route */}
+        <Route path='/not-approved' element={<NotApproved/>}/>
 
+        {/* Protected main route - for approved employees */}
+        <Route 
+          path='/app'
+          element={
+            <ProtectedRoute requireApproval>
+              <MainApp/>
+            </ProtectedRoute>
+          }
+        />
 
-        <Route path="/admindashboard" element={<AdminDashboard/>}/>
- 
+        {/* Protected admin route - only for admins */}
+        <Route 
+          path='/admin'
+          element={
+            <ProtectedRoute requireAdmin requireApproval>
+              <AdminDashboard/>
+            </ProtectedRoute>
+          }
+        />
 
         {/* 404 Route */}
-        <Route
-          path="*"
+        <Route 
+          path='*'
           element={
-            <div
-              className="flex flex-col items-center justify-center min-h-screen
-                bg-gradient-to-br from-blue-200 to-purple-200"
+            <div className='flex flex-col items-center justify-center min-h-screen
+              bg-gradient-to-br from-blue-200 to-purple-200'
             >
-              <h1>404</h1>
-              <p>Page not found</p>
-                <button 
-                  onClick={() => window.location.href = '/'}
-                  className="px-6 py-2 bg-black text-white rounded-md hover:bg-gray-800"
-                >
-                  Go Home
-                </button>
+              <h1 className="text-4xl font-bold mb-4">404</h1>
+              <p className="text-xl">Page not found</p>
             </div>
           }
         />
@@ -45,4 +55,4 @@ function App() {
   );
 }
 
-export default App;
+export default App
