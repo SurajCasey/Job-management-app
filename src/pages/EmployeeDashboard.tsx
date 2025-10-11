@@ -1,11 +1,5 @@
-
-
 const EmployeeDashboard = () => {
-  return (
-    <div>
-      
-    </div>
-  )
-}
+  return <div></div>;
+};
 
-export default EmployeeDashboard
+export default EmployeeDashboard;
