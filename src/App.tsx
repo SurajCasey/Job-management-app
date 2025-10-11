@@ -3,8 +3,9 @@ import "./index.css";
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import LoginSignup from "./pages/LoginSignup";
 import NotApproved from "./pages/NotApproved";
-import ProtectedRoute from "./components/shared/ProtectedRoute";
-import MainApp from "./pages/MainApp";
+// import ProtectedRoute from "./components/shared/ProtectedRoute";
+
+import AdminDashboard from "./pages/AdminDashboard";
 
 function App() {
   return (
@@ -16,15 +17,9 @@ function App() {
         {/* not approved route */}
         <Route path="/not-approved" element={<NotApproved />} />
 
-        {/* protected main route */}
-        <Route
-          path="/app"
-          element={
-            <ProtectedRoute requireApproval>
-              <MainApp />
-            </ProtectedRoute>
-          }
-        />
+
+        <Route path="/admindashboard" element={<AdminDashboard/>}/>
+ 
 
         {/* 404 Route */}
         <Route
