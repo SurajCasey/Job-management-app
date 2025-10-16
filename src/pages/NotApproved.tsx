@@ -4,11 +4,10 @@ import { useAuth } from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 
 const NotApproved = () => {
-    const { signOut, profile } = useAuth();
+    const { profile } = useAuth();
     const navigate = useNavigate();
 
-    const handleSignOut = async () => {
-        await signOut();
+    const handleSignOut =() => {
         navigate("/");
     };
 
@@ -45,9 +44,10 @@ const NotApproved = () => {
                     </div>
 
                     <div className="bg-gray-50 rounded-lg p-4 mb-6 w-full text-left text-sm">
-                        <p className="text-gray-600 mb-1">
+                        {profile?.email && (<p className="text-gray-600 mb-1">
                             <span className="font-semibold">Email:</span> {profile?.email}
-                        </p>
+                            </p>
+                        )}
                         {profile?.employer_email && (
                             <p className="text-gray-600">
                                 <span className="font-semibold">Employer:</span> {profile.employer_email}

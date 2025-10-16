@@ -18,6 +18,21 @@ export interface LoginResult{
     error? : string;
 }
 
+export interface AddClientData{
+  name: string;
+  email: string;
+  phone: string;
+  company: string;
+  address?: string;
+  notes?: string;
+}
+
+export interface DeleteClientData{
+  id: string;
+}
+
+
+// For login function
 export const LoginUser = async (credentials : LoginCredentials): Promise <LoginResult> =>{
     try {
         const { data: authData, error: authError} = await supabase.auth.signInWithPassword({
@@ -48,7 +63,7 @@ export const LoginUser = async (credentials : LoginCredentials): Promise <LoginR
 
         if(!profile?.approved_by_admin){
             await supabase.auth.signOut();
-            return {success: false, error: "Your account is not approved by admin yet."}
+            return {success: false, error: "not-approved"};
         }
 
         return { success: true, role: profile.role};
@@ -59,6 +74,8 @@ export const LoginUser = async (credentials : LoginCredentials): Promise <LoginR
     }
 }
 
+
+// For signup function
 export const signupUser = async (formData: SignupData): Promise<{success: boolean; error?:string}>=>{
     try {
         // First, sign up the user with Supabase Auth
@@ -125,3 +142,67 @@ export const signupUser = async (formData: SignupData): Promise<{success: boolea
         return{success: false, error: "An unexpected error occured during signup."};
     }
 };
+
+
+// for adding client data
+export const addClient = async (clientData: AddClientData): Promise<{success: boolean; error?: string;}> =>{
+  try {
+    //  get current users
+    const {data : {user}} = await supabase.auth.getUser();
+
+    if(!user){
+      return{success: false, error:"You must be logged in to add a client"}
+    }
+
+    // Insert client into database
+    const { error: insertError} = await supabase
+      .from('clients')
+      .insert({
+        name: clientData.name,
+        email: clientData.email,
+        phone: clientData.phone,
+        company: clientData.company,
+        address: clientData.address,
+        notes: clientData.notes,
+        created_by: user.id,
+        created_at: new Date().toISOString()
+      });
+    
+      if(insertError){
+        console.error("Failed to add client", insertError);
+      }
+
+      return {success: true}
+
+  } catch (error) {
+    console.error("Error adding client data", error);
+    return {success:false, error:"An unexpected error occured while adding the client"};
+  }
+}
+
+// delete client data
+export const deleteClient = async (clientId: string): Promise<{success: boolean, error?:string}> => {
+  try {
+    const { data: {user}} = await supabase.auth.getUser();
+
+    if(!user){
+      return{success: false, error: "You must be logged in to delete a client."}
+    }
+
+    // delete client from database
+    const{ error: deleteError} = await supabase
+    .from('clients')
+    .delete()
+    .eq('id', clientId);
+
+    if(deleteError){
+      console.error("Failed to delete client", deleteError);
+      return {success:false, error: deleteError.message};
+    }
+
+    return {success: true}
+  } catch (error) {
+    console.error("Error deleting client's data", error)
+    return{ success:false, error: " An unexpected error occured while deleting the client."}
+  }
+}

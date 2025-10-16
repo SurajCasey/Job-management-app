@@ -3,8 +3,13 @@ import { FaBriefcase, FaClock, FaFile, FaHome, FaUpload } from "react-icons/fa"
 import { FaPeopleGroup } from "react-icons/fa6"
 import { IoMdPeople } from "react-icons/io"
 import { IoPeople } from "react-icons/io5"
+import { useAuth } from "../../hooks/useAuth"
+import Dashboard from "../ui/Dashboard"
+import Admin from "../ui/Admin"
+import Clients from "../ui/Clients"
 
 const Navbar = () => {
+  const { isAdmin } = useAuth();
   return (
     <div>
       <Tabs defaultValue="dashboard">
@@ -32,20 +37,24 @@ const Navbar = () => {
                 <FaBriefcase className="hidden md:flex"/>
                 <span>Jobs</span>
             </TabsTrigger>
-            <TabsTrigger 
-                className="navitems"
-                value="staff"
-            >
-                <FaPeopleGroup className="hidden md:flex"/>
-                <span>Staff</span>               
-            </TabsTrigger>
-            <TabsTrigger 
-                className="navitems"
-                value="clients"
-            >
-                <IoMdPeople className="hidden md:flex"/>   
-                <span>Clients</span>
-            </TabsTrigger>
+            {isAdmin && (
+                <TabsTrigger 
+                  className="navitems"
+                  value="staff"
+              >
+                  <FaPeopleGroup className="hidden md:flex"/>
+                  <span>Staff</span>               
+              </TabsTrigger>
+            )}
+            {isAdmin &&(
+              <TabsTrigger 
+                  className="navitems"
+                  value="clients"
+              >
+                  <IoMdPeople className="hidden md:flex"/>   
+                  <span>Clients</span>
+              </TabsTrigger>
+            )}
             <TabsTrigger 
                 className="navitems"
                 value="reports"
@@ -60,43 +69,26 @@ const Navbar = () => {
                 <FaUpload className="hidden md:flex"/>
                 <span>Files</span>
             </TabsTrigger>
-            <TabsTrigger 
-                className="navitems"
-                value="admin"
-            >
-                <IoPeople className="hidden md:flex"/>
-                <span>Admin</span>
-            </TabsTrigger>
-            
+           {isAdmin && (
+              <TabsTrigger 
+                  className="navitems"
+                  value="admin"
+              >
+                  <IoPeople className="hidden md:flex"/>
+                  <span>Admin</span>
+              </TabsTrigger>
+           )}
         </TabsList>
 
-        <TabsContent value="dashboard">
-          
-        </TabsContent>
+      <TabsContent value="dashboard">
+        <Dashboard/>
+      </TabsContent>
 
-        <TabsContent value="time">
-
+       <TabsContent value="admin">          
+          <Admin/>
         </TabsContent>
-
-        <TabsContent value="jobs">
-            
-        </TabsContent>
-        <TabsContent value="staff">
-            
-        </TabsContent>
-        <TabsContent  value="clients">
-            
-        </TabsContent>
-        <TabsContent value="reports">
-            
-        </TabsContent>
-
-        <TabsContent value="files">
-
-        </TabsContent>
-
-        <TabsContent value="admin">
-
+        <TabsContent value="clients">
+          <Clients/>
         </TabsContent>
 
 

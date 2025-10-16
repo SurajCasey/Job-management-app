@@ -19,9 +19,14 @@ const LoginForm = () => {
                 password: loginPassword,
             })
             if(!result.success){
+                if(result.error === "not-approved"){
+                  navigate("/not-approved");
+                  return;
+                }
                 toast.error(result.error || "Login failed");
                 return;
             }
+          
 
             toast.success("Login successful!");
             // Redirect based on role
@@ -30,6 +35,8 @@ const LoginForm = () => {
             } else {
                 navigate("/app");
             }
+
+            
         } catch (error) {
             console.error("Login error", error);
             toast.error("An unexpected error occured.")

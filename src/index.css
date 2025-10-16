@@ -20,7 +20,7 @@ body{
 }
 
 .navitems{
-  @apply my-1 mx-1 py-1 px-1 data-[state=active]:bg-white
+  @apply my-1 mx-1 py-1 px-1 data-[state=active]:bg-white 
   data-[state=active]:font-medium
-  rounded-xl cursor-pointer w-full md:flex justify-center gap-1 items-center
+  rounded-xl cursor-pointer w-full md:flex justify-center gap-1 items-center cursor-pointer
 }

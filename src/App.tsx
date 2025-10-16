@@ -4,8 +4,8 @@ import { Route, BrowserRouter as Router, Routes } from 'react-router-dom'
 import LoginSignup from './pages/LoginSignup';
 import NotApproved from './pages/NotApproved';
 import ProtectedRoute from './components/shared/ProtectedRoute';
-import MainApp from './pages/MainApp';
 import AdminDashboard from './pages/AdminDashboard';
+import EmployeeDashboard from './pages/EmployeeDashboard';
 
 function App() {
   return (
@@ -23,7 +23,7 @@ function App() {
           path='/app'
           element={
             <ProtectedRoute requireApproval>
-              <MainApp/>
+              <EmployeeDashboard/>
             </ProtectedRoute>
           }
         />
