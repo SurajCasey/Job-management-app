@@ -11,6 +11,7 @@ import Jobs from "../ui/Jobs"
 import Time from "../ui/Time"
 import Reports from "../ui/Reports"
 import Files from "../ui/Files"
+import Staff from "../ui/Staffs"
 
 const Navbar = () => {
   const { isAdmin } = useAuth()
@@ -135,6 +136,10 @@ const Navbar = () => {
 
           <TabsContent value="files" className="mt-0">
             <Files />
+          </TabsContent>
+
+          <TabsContent value="staff" className="mt-0">
+            <Staff/>
           </TabsContent>
 
           {isAdmin && (

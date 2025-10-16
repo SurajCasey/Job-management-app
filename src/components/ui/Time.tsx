@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react"
-import { FaClock, FaPlay, FaPause } from "react-icons/fa"
+import { FaClock, FaPlay, FaPause, FaCheckCircle } from "react-icons/fa"
 import toast from "react-hot-toast"
 import { supabase } from "../../lib/supabaseClient"
 import { useAuth } from "../../hooks/useAuth"
-import { logTime, updateTimeEntry } from "../../utils/helpers"
+import { logTime, updateTimeEntry, completeJob } from "../../utils/helpers"
 import LoadingSpinner from "../shared/LoadingSpinner"
 
 interface Job {
@@ -32,6 +32,7 @@ const Time = () => {
   const [currentTime, setCurrentTime] = useState<string>(new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true }))
   const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([])
   const [currentTimeEntryId, setCurrentTimeEntryId] = useState<string>("")
+  const [completingJob, setCompletingJob] = useState(false)
   const [loading, setLoading] = useState(false)
 
   // Update current time
@@ -48,7 +49,6 @@ const Time = () => {
       setLoading(true)
       const today = new Date().toISOString().split('T')[0]
 
-      // Get jobs that start today or are due today
       const { data, error } = await supabase
         .from('jobs')
         .select('id, job_number, job_type, status')
@@ -89,7 +89,6 @@ const Time = () => {
 
       if (error) throw error
 
-      // Map the response to match TimeEntry interface
       const mappedData = data?.map((entry: any) => ({
         id: entry.id,
         job_id: entry.job_id,
@@ -118,12 +117,7 @@ const Time = () => {
     }
 
     const now = new Date()
-    const timeStr = now.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: true, 
-    });
+    const timeStr = now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).slice(0, 8)
     const today = now.toISOString().split('T')[0]
 
     const result = await logTime({
@@ -158,12 +152,30 @@ const Time = () => {
       toast.success("Clocked out successfully!")
       setIsClocked(false)
       setClockedInTime("")
-      setSelectedJob("")
       setCurrentTimeEntryId("")
       fetchTodaysTimeEntries()
     } else {
       toast.error(result.error || "Failed to clock out")
     }
+  }
+
+  const handleCompleteJob = async () => {
+    if (!selectedJob) {
+      toast.error("No job selected")
+      return
+    }
+
+    setCompletingJob(true)
+    const result = await completeJob(selectedJob)
+
+    if (result.success) {
+      toast.success("Job marked as completed!")
+      setSelectedJob("")
+      fetchTodaysJobs()
+    } else {
+      toast.error(result.error || "Failed to complete job")
+    }
+    setCompletingJob(false)
   }
 
   if (loading) {
@@ -233,6 +245,18 @@ const Time = () => {
                   </button>
                 )}
               </div>
+
+              {/* Complete Job Button */}
+              {isClocked && (
+                <button
+                  onClick={handleCompleteJob}
+                  disabled={!selectedJob || completingJob}
+                  className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed font-semibold flex items-center justify-center gap-2 transition-colors"
+                >
+                  <FaCheckCircle size={18} />
+                  {completingJob ? "Processing..." : "Mark Complete"}
+                </button>
+              )}
 
               {/* Status Badge */}
               <div className="flex items-center justify-center gap-2 p-3 bg-blue-50 rounded-lg">

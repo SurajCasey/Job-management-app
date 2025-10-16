@@ -33,8 +33,8 @@ const Header = () => {
               <FaBriefcase size={28} className="text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Job Management</h1>
-              <p className="text-xs text-gray-500">Organize your work</p>
+              <h1 className="text-2xl font-bold text-gray-900">Statewide Escalator Cleaning</h1>
+              <p className="text-xs text-gray-500">Professional Escalator facility company</p>
             </div>
           </div>
 

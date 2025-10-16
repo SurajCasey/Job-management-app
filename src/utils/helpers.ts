@@ -382,3 +382,65 @@ export const updateTimeEntry = async (timeEntryId: string, endTime: string): Pro
     return { success: false, error: "An unexpected error occurred" }
   }
 }
+
+
+
+// Add this to src/utils/helpers.ts
+
+export const completeJob = async (jobId: string): Promise<{success: boolean, error?: string}> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      return { success: false, error: "You must be logged in" }
+    }
+
+    const today = new Date().toISOString().split('T')[0]
+
+    const { error: updateError } = await supabase
+      .from('jobs')
+      .update({
+        status: 'completed',
+        completion_date: today,
+      })
+      .eq('id', jobId)
+
+    if (updateError) {
+      console.error("Failed to complete job:", updateError)
+      return { success: false, error: updateError.message }
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error("Error completing job:", error)
+    return { success: false, error: "An unexpected error occurred" }
+  }
+}
+
+export const startJob = async (jobId: string): Promise<{success: boolean, error?: string}> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      return { success: false, error: "You must be logged in" }
+    }
+
+    const { error: updateError } = await supabase
+      .from('jobs')
+      .update({
+        status: 'in_progress',
+        start_date: new Date().toISOString().split('T')[0],
+      })
+      .eq('id', jobId)
+
+    if (updateError) {
+      console.error("Failed to start job:", updateError)
+      return { success: false, error: updateError.message }
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error("Error starting job:", error)
+    return { success: false, error: "An unexpected error occurred" }
+  }
+}
