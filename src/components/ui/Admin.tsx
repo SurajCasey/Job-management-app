@@ -195,7 +195,7 @@ const Admin = () => {
   };
 
   if (loading) {
-    return <LoadingSpinner fullScreen message="Loading admin dashboard..." />;
+    return <LoadingSpinner message="Loading admin dashboard..." />;
   }
 
   return (

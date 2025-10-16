@@ -31,6 +31,28 @@ export interface DeleteClientData{
   id: string;
 }
 
+export interface AddJobData {
+  job_number: string
+  title: string
+  description?: string
+  status: "pending" | "in_progress" | "completed" | "cancelled" | "on_hold"
+  priority: "low" | "medium" | "high" | "urgent"
+  start_date?: string | null
+  due_date?: string | null
+  hours?: number | null
+  location?: string | null
+}
+
+export interface LogTimeData {
+  job_id: string
+  date: string
+  start_time: string
+  end_time?: string | null
+  description?: string
+  is_billable?: boolean
+}
+
+
 
 // For login function
 export const LoginUser = async (credentials : LoginCredentials): Promise <LoginResult> =>{
@@ -204,5 +226,159 @@ export const deleteClient = async (clientId: string): Promise<{success: boolean,
   } catch (error) {
     console.error("Error deleting client's data", error)
     return{ success:false, error: " An unexpected error occured while deleting the client."}
+  }
+}
+
+
+// For adding jobs
+
+
+export const addJob = async (jobData: AddJobData): Promise<{success: boolean, error?: string}> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      return { success: false, error: "You must be logged in to add a job" }
+    }
+
+    const { error: insertError } = await supabase
+      .from('jobs')
+      .insert({
+        job_number: jobData.job_number,
+        job_type: jobData.title,
+        description: jobData.description || null,
+        status: jobData.status,
+        priority: jobData.priority,
+        start_date: jobData.start_date || null,
+        due_date: jobData.due_date || null,
+        hours: jobData.hours || null,
+        location: jobData.location || null,
+        created_by: user.id,
+        created_at: new Date().toISOString(),
+      })
+
+    if (insertError) {
+      console.error("Failed to add job:", insertError)
+      return { success: false, error: insertError.message }
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error("Error adding job:", error)
+    return { success: false, error: "An unexpected error occurred" }
+  }
+}
+
+export const deleteJob = async (jobId: string): Promise<{success: boolean, error?: string}> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      return { success: false, error: "You must be logged in to delete a job" }
+    }
+
+    const { error: deleteError } = await supabase
+      .from('jobs')
+      .delete()
+      .eq('id', jobId)
+
+    if (deleteError) {
+      console.error("Failed to delete job:", deleteError)
+      return { success: false, error: deleteError.message }
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error("Error deleting job:", error)
+    return { success: false, error: "An unexpected error occurred" }
+  }
+}
+
+
+// For time entries
+export const logTime = async (timeData: LogTimeData): Promise<{success: boolean, error?: string, timeEntryId?: string}> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      return { success: false, error: "You must be logged in to log time" }
+    }
+
+    // Calculate duration if both times are provided
+    let duration_hours = null
+    if (timeData.start_time && timeData.end_time) {
+      const start = new Date(`2000-01-01T${timeData.start_time}`)
+      const end = new Date(`2000-01-01T${timeData.end_time}`)
+      duration_hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60)
+    }
+
+    const { data, error: insertError } = await supabase
+      .from('time_entries')
+      .insert({
+        user_id: user.id,
+        job_id: timeData.job_id,
+        date: timeData.date,
+        start_time: timeData.start_time,
+        end_time: timeData.end_time || null,
+        duration_hours: duration_hours,
+        description: timeData.description || null,
+        status: 'pending',
+        created_at: new Date().toISOString(),
+      })
+      .select()
+
+    if (insertError) {
+      console.error("Failed to log time:", insertError)
+      return { success: false, error: insertError.message }
+    }
+
+    return { success: true, timeEntryId: data?.[0]?.id }
+  } catch (error) {
+    console.error("Error logging time:", error)
+    return { success: false, error: "An unexpected error occurred" }
+  }
+}
+
+export const updateTimeEntry = async (timeEntryId: string, endTime: string): Promise<{success: boolean, error?: string}> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      return { success: false, error: "You must be logged in to update time" }
+    }
+
+    // Get the existing entry to calculate duration
+    const { data: existingEntry, error: fetchError } = await supabase
+      .from('time_entries')
+      .select('start_time')
+      .eq('id', timeEntryId)
+      .single()
+
+    if (fetchError) {
+      return { success: false, error: "Time entry not found" }
+    }
+
+    // Calculate duration
+    const start = new Date(`2000-01-01T${existingEntry.start_time}`)
+    const end = new Date(`2000-01-01T${endTime}`)
+    const duration_hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60)
+
+    const { error: updateError } = await supabase
+      .from('time_entries')
+      .update({
+        end_time: endTime,
+        duration_hours: duration_hours,
+      })
+      .eq('id', timeEntryId)
+
+    if (updateError) {
+      console.error("Failed to update time:", updateError)
+      return { success: false, error: updateError.message }
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error("Error updating time:", error)
+    return { success: false, error: "An unexpected error occurred" }
   }
 }

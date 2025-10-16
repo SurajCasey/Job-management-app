@@ -1,49 +1,79 @@
-import { useEffect, useState } from "react";
-import { FaBriefcase} from "react-icons/fa"
-import { useAuth } from "../../hooks/useAuth";
-import { useNavigate } from "react-router-dom";
-import { MdLogout } from "react-icons/md";
+import { useEffect, useState } from "react"
+import { FaBriefcase } from "react-icons/fa"
+import { useAuth } from "../../hooks/useAuth"
+import { useNavigate } from "react-router-dom"
+import { MdLogout } from "react-icons/md"
 
 const Header = () => {
-  const {profile, signOut} = useAuth();
-  const navigate = useNavigate();
+  const { profile, signOut } = useAuth()
+  const navigate = useNavigate()
   const [currTime, setCurrTime] = useState(
-    new Date().toLocaleTimeString("en-US", {hour12: true})
-  );
-  
-  // constant update of time
-  useEffect(()=>{
-    const interval = setInterval(()=>{
-      setCurrTime(new Date().toLocaleTimeString("en-US", {hour12: true}));
-    }, 1000);
-    return () => clearInterval(interval);
-  })
-  
-  // for logout
+    new Date().toLocaleTimeString("en-US", { hour12: true })
+  )
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrTime(new Date().toLocaleTimeString("en-US", { hour12: true }))
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [])
+
   const handleLogout = async () => {
-    await signOut();
-    navigate('/');
-  };
+    navigate("/")
+    await signOut()
+  }
 
   return (
-    <header 
-      className="flex flex-col md:flex-row items-center justify-between px-5 py-2 gap-2"
-    >
-        <div className="flex items-center gap-3">
-            <FaBriefcase size={30}/>
-            <h1 className="text-2xl font-medium">Job Management</h1>
+    <header className="bg-white border-b border-gray-200 shadow-sm">
+      <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="flex items-center justify-between">
+          {/* Left - Logo */}
+          <div className="flex items-center gap-3">
+            <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg p-2.5 shadow-md">
+              <FaBriefcase size={28} className="text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Job Management</h1>
+              <p className="text-xs text-gray-500">Organize your work</p>
+            </div>
+          </div>
+
+          {/* Right - User Info and Logout */}
+          <div className="flex items-center gap-6">
+            {/* Time */}
+            <div className="text-right hidden md:block">
+              <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold">Time</p>
+              <p className="text-lg font-semibold text-gray-900">{currTime}</p>
+            </div>
+
+            {/* Divider */}
+            <div className="hidden md:block h-8 w-px bg-gray-200"></div>
+
+            {/* User Name */}
+            <div className="text-right hidden md:block">
+              <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold">Welcome</p>
+              <p className="text-lg font-semibold text-gray-900">{profile?.name || "User"}</p>
+            </div>
+
+            {/* Logout Button */}
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors duration-200 font-medium border border-red-200 hover:border-red-300"
+            >
+              <MdLogout size={18} />
+              <span className="hidden sm:inline">Logout</span>
+            </button>
+          </div>
         </div>
-        <div className="w-full md:w-auto flex justify-between gap-5">
-          <p>{currTime}</p>
-          <p>Welcome, {profile?.name || 'User'}</p>
+
+        {/* Mobile View */}
+        <div className="md:hidden flex justify-between items-center mt-3 pt-3 border-t border-gray-100">
+          <div>
+            <p className="text-xs text-gray-500">{currTime}</p>
+            <p className="text-sm font-semibold text-gray-900">{profile?.name || "User"}</p>
+          </div>
         </div>
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-1 hover:text-red-700 cursor-pointer"
-        >
-          <MdLogout size={18}/>
-          Logout
-        </button>
+      </div>
     </header>
   )
 }
