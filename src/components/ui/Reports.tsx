@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react"
-import { FaClock, FaDownload, FaCalendar } from "react-icons/fa"
+import { FaDownload, FaCalendar } from "react-icons/fa"
 import { supabase } from "../../lib/supabaseClient"
 import { useAuth } from "../../hooks/useAuth"
 import toast from "react-hot-toast"
 import LoadingSpinner from "../shared/LoadingSpinner"
 import jsPDF from "jspdf"
 import "jspdf-autotable"
-import { FiBarChart } from "react-icons/fi"
+
 
 interface TimeData {
   date: string
