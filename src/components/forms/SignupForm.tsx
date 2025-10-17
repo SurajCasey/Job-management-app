@@ -5,7 +5,6 @@ import { signupUser } from "../../utils/helpers";
 const SignupForm = () => {
     const [fullName, setFullName] = useState("");
     const [signupEmail, setSignupEmail] = useState("");
-    const [employerEmail, setEmployerEmail] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
@@ -19,7 +18,7 @@ const SignupForm = () => {
             return;
         }
 
-        if (!signupEmail.trim() || !employerEmail.trim()) {
+        if (!signupEmail.trim()) {
             toast.error("Please fill in all email fields");
             return;
         }
@@ -40,7 +39,6 @@ const SignupForm = () => {
             const result = await signupUser({
                 fullName,
                 email: signupEmail,
-                employerEmail,
                 password: newPassword,
             })
             if(!result.success){
@@ -49,7 +47,6 @@ const SignupForm = () => {
             }
             setFullName("");
             setSignupEmail("");
-            setEmployerEmail("");
             setNewPassword("");
             setConfirmPassword("");
 
@@ -91,22 +88,6 @@ const SignupForm = () => {
                     placeholder="Enter your personal email"
                     value={signupEmail}
                     onChange={(e) => setSignupEmail(e.target.value)}
-                    required
-                    disabled={isLoading}
-                />
-            </fieldset>
-
-            <fieldset className="fieldset">
-                <label className="label" htmlFor="employer-email">
-                    Employer's Email
-                </label>
-                <input
-                    type="email"
-                    className="input"
-                    id="employer-email"
-                    placeholder="Enter your employer's email"
-                    value={employerEmail}
-                    onChange={(e) => setEmployerEmail(e.target.value)}
                     required
                     disabled={isLoading}
                 />

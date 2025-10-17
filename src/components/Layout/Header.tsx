@@ -19,8 +19,8 @@ const Header = () => {
   }, [])
 
   const handleLogout = async () => {
+    await signOut();
     navigate("/")
-    await signOut()
   }
 
   return (

@@ -10,7 +10,6 @@ interface PendingUser {
   id: string;
   name: string;
   email: string;
-  employer_email: string | null;
   role: string;
   approved_by_admin: boolean;
   created_at: string;
@@ -302,12 +301,7 @@ const Admin = () => {
                             <p className="text-sm text-gray-600">
                               <span className="font-medium">Email:</span> {user.email}
                             </p>
-                            {user.employer_email && (
-                              <p className="text-sm text-gray-600">
-                                <span className="font-medium">Employer:</span>{" "}
-                                {user.employer_email}
-                              </p>
-                            )}
+
                             
                             {/* Role Selector */}
                             <div className="flex items-center gap-2 mt-2">
@@ -406,12 +400,6 @@ const Admin = () => {
                             <p className="text-sm text-gray-600">
                               <span className="font-medium">Email:</span> {user.email}
                             </p>
-                            {user.employer_email && (
-                              <p className="text-sm text-gray-600">
-                                <span className="font-medium">Employer:</span>{" "}
-                                {user.employer_email}
-                              </p>
-                            )}
                           </div>
                         </div>
 

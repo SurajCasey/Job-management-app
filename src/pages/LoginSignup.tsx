@@ -14,12 +14,12 @@ const LoginSignup = () => {
             <header className="flex items-center gap-4 mb-2">
                 <FaBriefcase size={40} />
                 <h1 className="text-3xl">
-                    Job Management App
+                    Statewide Escalator Cleaning
                 </h1>
             </header>
 
             <p className="mb-8 text-gray-500">
-                Professional job management and time tracking
+                All kinds of service for escalators
             </p>
 
             <Tabs

@@ -8,7 +8,6 @@ export interface LoginCredentials {
 export interface SignupData {
     fullName: string;
     email: string;
-    employerEmail: string;
     password: string;
 }
 
@@ -137,7 +136,6 @@ export const signupUser = async (formData: SignupData): Promise<{success: boolea
                 id: userId,
                 name: formData.fullName,
                 email: formData.email,
-                employer_email: formData.employerEmail,
                 role: 'employee',
                 approved_by_admin: false,
                 created_at: new Date().toISOString(),

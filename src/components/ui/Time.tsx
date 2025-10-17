@@ -29,19 +29,29 @@ const Time = () => {
   const [selectedJob, setSelectedJob] = useState<string>("")
   const [isClocked, setIsClocked] = useState(false)
   const [clockedInTime, setClockedInTime] = useState<string>("")
-  const [currentTime, setCurrentTime] = useState<string>(new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true }))
+  const [currentTime, setCurrentTime] = useState<string>(new Date().toLocaleTimeString())
   const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([])
   const [currentTimeEntryId, setCurrentTimeEntryId] = useState<string>("")
   const [completingJob, setCompletingJob] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  // Update current time
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTime(new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true }))
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [])
+  // Update current time every second
+useEffect(() => {
+  const interval = setInterval(() => {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true,
+    });
+
+    // Convert AM/PM to uppercase
+    setCurrentTime(timeString.replace(/am|pm/, match => match.toUpperCase()));
+  }, 1000);
+
+  return () => clearInterval(interval);
+}, []);
 
   // Fetch today's jobs
   const fetchTodaysJobs = async () => {
@@ -65,11 +75,10 @@ const Time = () => {
     }
   }
 
-  // Fetch time entries for today
+  // Fetch today's time entries
   const fetchTodaysTimeEntries = async () => {
+    if (!user?.id) return
     try {
-      if (!user?.id) return
-
       const today = new Date().toISOString().split('T')[0]
 
       const { data, error } = await supabase
@@ -100,32 +109,40 @@ const Time = () => {
       })) || []
 
       setTimeEntries(mappedData)
+
+      // Restore active clock state if an entry is running
+      const activeEntry = mappedData.find((entry) => !entry.end_time)
+      if (activeEntry) {
+        setIsClocked(true)
+        setClockedInTime(activeEntry.start_time)
+        setCurrentTimeEntryId(activeEntry.id)
+        setSelectedJob(activeEntry.job_id)
+      } else {
+        setIsClocked(false)
+        setClockedInTime("")
+        setCurrentTimeEntryId("")
+        setSelectedJob("")
+      }
     } catch (error) {
       console.error("Error fetching time entries:", error)
     }
   }
 
   useEffect(() => {
-    fetchTodaysJobs()
-    fetchTodaysTimeEntries()
+    if (user?.id) {
+      fetchTodaysJobs()
+      fetchTodaysTimeEntries()
+    }
   }, [user?.id])
 
   const handleClockIn = async () => {
-    if (!selectedJob) {
-      toast.error("Please select a job")
-      return
-    }
+    if (!selectedJob) return toast.error("Please select a job")
 
     const now = new Date()
-    const timeStr = now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).slice(0, 8)
+    const timeStr = now.toLocaleTimeString("en-US", { hour12: true }).slice(0, 8)
     const today = now.toISOString().split('T')[0]
 
-    const result = await logTime({
-      job_id: selectedJob,
-      date: today,
-      start_time: timeStr,
-    })
-
+    const result = await logTime({ job_id: selectedJob, date: today, start_time: timeStr })
     if (result.success) {
       toast.success("Clocked in successfully!")
       setIsClocked(true)
@@ -138,21 +155,18 @@ const Time = () => {
   }
 
   const handleClockOut = async () => {
-    if (!currentTimeEntryId) {
-      toast.error("No active clock in")
-      return
-    }
+    if (!currentTimeEntryId) return toast.error("No active clock in")
 
     const now = new Date()
-    const timeStr = now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).slice(0, 8)
+    const timeStr = now.toLocaleTimeString("en-US", { hour12: true }).slice(0, 8)
 
     const result = await updateTimeEntry(currentTimeEntryId, timeStr)
-
     if (result.success) {
       toast.success("Clocked out successfully!")
       setIsClocked(false)
       setClockedInTime("")
       setCurrentTimeEntryId("")
+      setSelectedJob("")
       fetchTodaysTimeEntries()
     } else {
       toast.error(result.error || "Failed to clock out")
@@ -160,14 +174,9 @@ const Time = () => {
   }
 
   const handleCompleteJob = async () => {
-    if (!selectedJob) {
-      toast.error("No job selected")
-      return
-    }
-
+    if (!selectedJob) return toast.error("No job selected")
     setCompletingJob(true)
     const result = await completeJob(selectedJob)
-
     if (result.success) {
       toast.success("Job marked as completed!")
       setSelectedJob("")
@@ -178,9 +187,7 @@ const Time = () => {
     setCompletingJob(false)
   }
 
-  if (loading) {
-    return <LoadingSpinner fullScreen={false} message="Loading..." />
-  }
+  if (loading) return <LoadingSpinner fullScreen={false} message="Loading..." />
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8">
@@ -188,10 +195,9 @@ const Time = () => {
         <h1 className="text-5xl font-bold text-gray-800 mb-2">Time Tracking</h1>
         <p className="text-gray-600 mb-8">Clock in and out for your daily work</p>
 
-        {/* Clock In/Out Card */}
         <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Left Side - Time Display */}
+            {/* Time display */}
             <div className="flex flex-col justify-center items-center bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-8">
               <FaClock className="text-blue-600 mb-4" size={48} />
               <p className="text-gray-600 text-sm mb-2">Current Time</p>
@@ -204,9 +210,8 @@ const Time = () => {
               )}
             </div>
 
-            {/* Right Side - Controls */}
+            {/* Controls */}
             <div className="flex flex-col gap-4">
-              {/* Job Selection */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Select Job</label>
                 <select
@@ -224,52 +229,38 @@ const Time = () => {
                 </select>
               </div>
 
-              {/* Clock In/Out Buttons */}
               <div className="flex gap-4">
                 {!isClocked ? (
-                  <button
-                    onClick={handleClockIn}
-                    disabled={!selectedJob}
-                    className="flex-1 bg-green-600 text-white py-4 rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed font-semibold flex items-center justify-center gap-2 transition-colors"
-                  >
-                    <FaPlay size={20} />
-                    Clock In
+                  <button onClick={handleClockIn} disabled={!selectedJob} className="flex-1 bg-green-600 text-white py-4 rounded-lg hover:bg-green-700 font-semibold flex items-center justify-center gap-2 transition-colors">
+                    <FaPlay size={20} /> Clock In
                   </button>
                 ) : (
-                  <button
-                    onClick={handleClockOut}
-                    className="flex-1 bg-red-600 text-white py-4 rounded-lg hover:bg-red-700 font-semibold flex items-center justify-center gap-2 transition-colors"
-                  >
-                    <FaPause size={20} />
-                    Clock Out
+                  <button onClick={handleClockOut} className="flex-1 bg-red-600 text-white py-4 rounded-lg hover:bg-red-700 font-semibold flex items-center justify-center gap-2 transition-colors">
+                    <FaPause size={20} /> Clock Out
                   </button>
                 )}
               </div>
 
-              {/* Complete Job Button */}
               {isClocked && (
                 <button
                   onClick={handleCompleteJob}
                   disabled={!selectedJob || completingJob}
-                  className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed font-semibold flex items-center justify-center gap-2 transition-colors"
+                  className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 disabled:bg-gray-300 font-semibold flex items-center justify-center gap-2 transition-colors"
                 >
                   <FaCheckCircle size={18} />
                   {completingJob ? "Processing..." : "Mark Complete"}
                 </button>
               )}
 
-              {/* Status Badge */}
               <div className="flex items-center justify-center gap-2 p-3 bg-blue-50 rounded-lg">
                 <div className={`w-3 h-3 rounded-full ${isClocked ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-                <span className="font-medium text-gray-700">
-                  {isClocked ? "Clocked In" : "Clocked Out"}
-                </span>
+                <span className="font-medium text-gray-700">{isClocked ? "Clocked In" : "Clocked Out"}</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Today's Time Entries */}
+        {/* Time entries */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6">
             <h2 className="text-2xl font-bold text-white">Today's Time Entries</h2>
@@ -285,20 +276,26 @@ const Time = () => {
                 <div key={entry.id} className="p-6 hover:bg-gray-50 transition-colors">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="font-semibold text-lg text-gray-800">
-                        {entry.job.job_number} - {entry.job.job_type}
-                      </h3>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {entry.start_time} {entry.end_time && `- ${entry.end_time}`}
-                      </p>
+                      <h3 className="font-semibold text-lg text-gray-800">{entry.job.job_number} - {entry.job.job_type}</h3>
+                      <p className="text-sm text-gray-600 mt-1">{entry.start_time} {entry.end_time && `- ${entry.end_time}`}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-bold text-blue-600">
-                        {entry.duration_hours ? entry.duration_hours.toFixed(2) : "-"}h
-                      </p>
-                      <span className="inline-block mt-2 px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full">
-                        Pending
-                      </span>
+                      {(() => {
+                        const totalHours = entry.duration_hours || 0;
+                        const hours = Math.floor(totalHours);
+                        const minutes = Math.round((totalHours - hours) * 60);
+                        return (
+                          <p className="text-2xl font-bold text-blue-600">
+                            {hours}h {minutes}m
+                          </p>
+                        );
+                      })()}
+                      
+                      {!entry.end_time && (
+                        <span className="inline-block mt-2 px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full">
+                          Pending
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
